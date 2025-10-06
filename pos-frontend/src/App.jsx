@@ -6,6 +6,8 @@ import {
   Navigate,
   useNavigate,
 } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // 👈 THIS LINE IS CRITICAL
+
 import { Home, Auth, Orders, Tables, Menu, Dashboard } from "./pages";
 import Header from "./components/shared/Header";
 import { useSelector } from "react-redux";
