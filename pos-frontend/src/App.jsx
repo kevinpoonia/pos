@@ -155,7 +155,7 @@ const RouterLink = ({ to, children, ...props }) => {
 
 // --- END: Shared Components/Hooks ---
 
-// --- START: Page Components (with initial content) ---
+// --- START: Page Components (Blank Shells) ---
 
 const PageContainer = ({ title, children }) => (
     <div className="p-6 max-w-7xl mx-auto">
@@ -167,45 +167,8 @@ const PageContainer = ({ title, children }) => (
 );
 
 function Home() {
-    const { user } = useSelector(state => state.user);
-    const [stats, setStats] = useState({ revenue: 0, orders: 0, tables: 0 });
-
-    // Mock Fetching Data (Where you would call your Render API: /api/order/stats)
-    useEffect(() => {
-        // Replace with actual API call to https://pos-nh74.onrender.com/api/dashboard/stats
-        setTimeout(() => {
-            setStats({
-                revenue: 1450.50,
-                orders: 42,
-                tables: 15,
-            });
-        }, 500);
-    }, []);
-
-    const cards = [
-        { title: "Today's Revenue", value: `$${stats.revenue.toFixed(2)}`, color: "text-green-500", icon: "💰" },
-        { title: "New Orders", value: stats.orders, color: "text-indigo-500", icon: "🧾" },
-        { title: "Open Tables", value: stats.tables, color: "text-yellow-500", icon: "🍽️" },
-    ];
-
-    return (
-        <PageContainer title={`Welcome Back, ${user?.name || 'Manager'}`}>
-            <p className="text-gray-600 mb-6">Quick overview of today's operational status.</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {cards.map((card, index) => (
-                    <div key={index} className="bg-indigo-50 p-6 rounded-xl shadow-lg border border-indigo-100 transition duration-300 hover:shadow-xl">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-medium text-gray-700">{card.title}</h3>
-                            <span className="text-3xl">{card.icon}</span>
-                        </div>
-                        <p className={`mt-2 text-4xl font-bold ${card.color}`}>
-                            {card.value}
-                        </p>
-                    </div>
-                ))}
-            </div>
-        </PageContainer>
-    );
+    // Paste the content of your Home.jsx file here
+    return <PageContainer title="Home"><p className="text-gray-400">Please paste the content of your Home component here.</p></PageContainer>;
 }
 
 function Auth() {
@@ -219,26 +182,23 @@ function Auth() {
         e.preventDefault();
         setLoading(true);
 
-        // --- AUTH LOGIC INTEGRATION POINT ---
-        // 1. **CORS/502 FIX CHECK:** This is where you would fetch data from your Render backend.
-        //    Example Fetch: fetch('https://pos-nh74.onrender.com/api/user/login', { ... });
-        //    If your CORS and 502 fixes are in place on Render, this will succeed.
+        // This is your API integration point. 
+        // Replace the promise delay with your actual fetch call to your Render backend.
 
         try {
-            // Simulate a successful API response
+            // Placeholder: Remove this line when integrating real API call
             await new Promise(resolve => setTimeout(resolve, 1500)); 
             
-            // This dispatch simulates the successful response payload from your backend
+            // Placeholder Dispatch: Replace with actual successful response data
             dispatch({ 
                 type: 'LOGIN_SUCCESS', 
                 payload: { user: { name: formData.email, role: isRegister ? 'waiter' : 'manager' }, token: 'real-token' } 
             });
             
-            // 2. **useNavigate FIX CHECK:** This works because useNavigate is correctly imported
             navigate('/'); 
         } catch (error) {
             console.error("Auth failed:", error);
-            // Dispatch failure state or show error message here
+            // Implement error handling here
         } finally {
             setLoading(false);
         }
@@ -249,6 +209,7 @@ function Auth() {
     };
 
     return (
+        // Paste the content of your Auth.jsx file here, using the handleSubmit/handleChange functions above
         <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
             <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl">
                 <h2 className="text-2xl font-bold text-center text-indigo-600 mb-6">
@@ -301,64 +262,26 @@ function Auth() {
 }
 
 function Orders() {
-    const [orders, setOrders] = useState([
-        { id: 101, table: 5, total: 35.50, status: 'Completed', time: '10:30 AM' },
-        { id: 102, table: 2, total: 88.00, status: 'In Progress', time: '11:15 AM' },
-        { id: 103, table: 8, total: 12.99, status: 'Pending', time: '12:00 PM' },
-    ]);
-
-    return (
-        <PageContainer title="Orders Management">
-            <p className="text-gray-600 mb-4">Track and manage current and past customer orders here.</p>
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            {['Order ID', 'Table', 'Total', 'Status', 'Time'].map(header => (
-                                <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {header}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {orders.map((order) => (
-                            <tr key={order.id} className="hover:bg-indigo-50 transition duration-150">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.id}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.table}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">${order.total.toFixed(2)}</td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                        order.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                                        order.status === 'In Progress' ? 'bg-indigo-100 text-indigo-800' :
-                                        'bg-yellow-100 text-yellow-800'
-                                    }`}>
-                                        {order.status}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.time}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </PageContainer>
-    );
+    // Paste the content of your Orders.jsx file here
+    return <PageContainer title="Orders Management"><p className="text-gray-400">Please paste the content of your Orders component here.</p></PageContainer>;
 }
 function Tables() {
-  return <PageContainer title="Table Status"><p className="text-gray-600">View and manage table occupancy and status.</p></PageContainer>;
+    // Paste the content of your Tables.jsx file here
+    return <PageContainer title="Table Status"><p className="text-gray-400">Please paste the content of your Tables component here.</p></PageContainer>;
 }
 function Menu() {
-  return <PageContainer title="Menu Editor"><p className="text-gray-600">Edit, add, and remove menu items and categories.</p></PageContainer>;
+    // Paste the content of your Menu.jsx file here
+    return <PageContainer title="Menu Editor"><p className="text-gray-400">Please paste the content of your Menu component here.</p></PageContainer>;
 }
 function Dashboard() {
-  return <PageContainer title="Dashboard & Reports"><p className="text-gray-600">View sales reports, daily summaries, and performance metrics.</p></PageContainer>;
+    // Paste the content of your Dashboard.jsx file here
+    return <PageContainer title="Dashboard & Reports"><p className="text-gray-400">Please paste the content of your Dashboard component here.</p></PageContainer>;
 }
 
 // --- END: Page Components ---
 
 
-// --- Main App Logic (from your provided code) ---
+// --- Main App Logic ---
 
 function Layout() {
   const isLoading = useLoadData(); 
@@ -431,7 +354,6 @@ function ProtectedRoutes({ children }) {
 
 function App() {
   return (
-    // Wrap the application in the custom AuthProvider (simulating Redux Provider)
     <AuthProvider>
       <Router>
         <Layout />
