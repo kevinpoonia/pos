@@ -11,12 +11,10 @@ import {
 // --- START: Single-File React-Redux Setup ---
 // Redux-like global state setup using React Context and Hooks (for single file compliance)
 
-// 1. DUMMY REDUX STORE / STATE
 const initialState = {
   user: {
     isAuth: false,
     user: null,
-    // Add token/error states if needed for Auth component logic
     token: null,
     error: null,
   },
@@ -40,10 +38,7 @@ const authReducer = (state, action) => {
 const AuthProvider = ({ children }) => {
   const [state, dispatch] = React.useReducer(authReducer, initialState);
   
-  // Custom useSelector-like hook
   const useSelector = (selectorFn) => selectorFn(state);
-
-  // Custom useDispatch-like function
   const useDispatch = () => dispatch;
   
   const value = useMemo(() => ({ state, dispatch, useSelector, useDispatch }), [state]);
@@ -51,15 +46,12 @@ const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Custom Hook to access state and dispatch globally
 const useReduxStore = () => React.useContext(AuthContext);
 
-// Custom useSelector implementation (from external Redux)
 const useSelector = (selectorFn) => {
     const { useSelector } = useReduxStore();
     return useSelector(selectorFn);
 };
-// Custom useDispatch implementation (from external Redux)
 const useDispatch = () => {
     const { useDispatch } = useReduxStore();
     return useDispatch();
@@ -70,7 +62,6 @@ const useDispatch = () => {
 
 // --- START: Shared Components/Hooks ---
 
-// 1. FullScreenLoader (Previously imported from ./components/shared/FullScreenLoader)
 function FullScreenLoader() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/90 backdrop-blur-sm">
@@ -80,7 +71,6 @@ function FullScreenLoader() {
   );
 }
 
-// 2. Header (Previously imported from ./components/shared/Header)
 function Header() {
     const { isAuth, user } = useSelector(state => state.user);
     const dispatch = useDispatch();
@@ -88,7 +78,6 @@ function Header() {
 
     const handleLogout = () => {
         dispatch({ type: 'LOGOUT' });
-        // After logout, navigate to auth page
         navigate('/auth'); 
     };
 
@@ -134,13 +123,12 @@ const NavLink = ({ to, name }) => (
     </RouterLink>
 );
 
-// 3. useLoadData Hook (Previously imported from ./hooks/useLoadData)
 function useLoadData() {
   const [isLoading, setIsLoading] = useState(true);
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // Simulate fetching user data or initial setup from an API
+    // Simulate initial setup from an API
     const loadInitialData = () => {
       // For demonstration: Set a dummy authenticated user after 1 second
       setTimeout(() => {
@@ -155,7 +143,6 @@ function useLoadData() {
   return isLoading;
 }
 
-// Renaming Link to RouterLink to avoid confusion with NavLink component
 const RouterLink = ({ to, children, ...props }) => {
     const navigate = useNavigate();
     return (
@@ -168,19 +155,57 @@ const RouterLink = ({ to, children, ...props }) => {
 
 // --- END: Shared Components/Hooks ---
 
-// --- START: Page Components (Previously imported from ./pages) ---
+// --- START: Page Components (with initial content) ---
 
 const PageContainer = ({ title, children }) => (
     <div className="p-6 max-w-7xl mx-auto">
         <h2 className="text-3xl font-extrabold text-gray-900 mb-6 border-b pb-2">{title}</h2>
-        <div className="bg-white p-6 rounded-xl shadow-lg">
+        <div className="bg-white p-6 rounded-xl shadow-lg min-h-[500px]">
             {children}
         </div>
     </div>
 );
 
 function Home() {
-  return <PageContainer title="Home"><p className="text-gray-600">Welcome to the POS Home screen. Quick access and overview goes here.</p></PageContainer>;
+    const { user } = useSelector(state => state.user);
+    const [stats, setStats] = useState({ revenue: 0, orders: 0, tables: 0 });
+
+    // Mock Fetching Data (Where you would call your Render API: /api/order/stats)
+    useEffect(() => {
+        // Replace with actual API call to https://pos-nh74.onrender.com/api/dashboard/stats
+        setTimeout(() => {
+            setStats({
+                revenue: 1450.50,
+                orders: 42,
+                tables: 15,
+            });
+        }, 500);
+    }, []);
+
+    const cards = [
+        { title: "Today's Revenue", value: `$${stats.revenue.toFixed(2)}`, color: "text-green-500", icon: "💰" },
+        { title: "New Orders", value: stats.orders, color: "text-indigo-500", icon: "🧾" },
+        { title: "Open Tables", value: stats.tables, color: "text-yellow-500", icon: "🍽️" },
+    ];
+
+    return (
+        <PageContainer title={`Welcome Back, ${user?.name || 'Manager'}`}>
+            <p className="text-gray-600 mb-6">Quick overview of today's operational status.</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {cards.map((card, index) => (
+                    <div key={index} className="bg-indigo-50 p-6 rounded-xl shadow-lg border border-indigo-100 transition duration-300 hover:shadow-xl">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-medium text-gray-700">{card.title}</h3>
+                            <span className="text-3xl">{card.icon}</span>
+                        </div>
+                        <p className={`mt-2 text-4xl font-bold ${card.color}`}>
+                            {card.value}
+                        </p>
+                    </div>
+                ))}
+            </div>
+        </PageContainer>
+    );
 }
 
 function Auth() {
@@ -188,15 +213,35 @@ function Auth() {
     const navigate = useNavigate();
     const [isRegister, setIsRegister] = useState(false);
     const [formData, setFormData] = useState({ email: '', password: '' });
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Simulate API call success
-        console.log(`Submitting ${isRegister ? 'Registration' : 'Login'} for:`, formData);
-        
-        // Use the navigate function (lowercase 'n') which fixes the previous error
-        dispatch({ type: 'LOGIN_SUCCESS', payload: { user: { name: formData.email, role: 'waiter' }, token: 'new-token' } });
-        navigate('/'); 
+        setLoading(true);
+
+        // --- AUTH LOGIC INTEGRATION POINT ---
+        // 1. **CORS/502 FIX CHECK:** This is where you would fetch data from your Render backend.
+        //    Example Fetch: fetch('https://pos-nh74.onrender.com/api/user/login', { ... });
+        //    If your CORS and 502 fixes are in place on Render, this will succeed.
+
+        try {
+            // Simulate a successful API response
+            await new Promise(resolve => setTimeout(resolve, 1500)); 
+            
+            // This dispatch simulates the successful response payload from your backend
+            dispatch({ 
+                type: 'LOGIN_SUCCESS', 
+                payload: { user: { name: formData.email, role: isRegister ? 'waiter' : 'manager' }, token: 'real-token' } 
+            });
+            
+            // 2. **useNavigate FIX CHECK:** This works because useNavigate is correctly imported
+            navigate('/'); 
+        } catch (error) {
+            console.error("Auth failed:", error);
+            // Dispatch failure state or show error message here
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleChange = (e) => {
@@ -234,9 +279,10 @@ function Auth() {
                     </div>
                     <button
                         type="submit"
-                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150"
+                        disabled={loading}
+                        className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white transition duration-150 ${loading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'}`}
                     >
-                        {isRegister ? 'Register' : 'Login'}
+                        {loading ? 'Processing...' : (isRegister ? 'Register' : 'Login')}
                     </button>
                 </form>
                 <p className="mt-6 text-center text-sm">
@@ -255,7 +301,49 @@ function Auth() {
 }
 
 function Orders() {
-  return <PageContainer title="Orders Management"><p className="text-gray-600">Track and manage current and past customer orders here.</p></PageContainer>;
+    const [orders, setOrders] = useState([
+        { id: 101, table: 5, total: 35.50, status: 'Completed', time: '10:30 AM' },
+        { id: 102, table: 2, total: 88.00, status: 'In Progress', time: '11:15 AM' },
+        { id: 103, table: 8, total: 12.99, status: 'Pending', time: '12:00 PM' },
+    ]);
+
+    return (
+        <PageContainer title="Orders Management">
+            <p className="text-gray-600 mb-4">Track and manage current and past customer orders here.</p>
+            <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                        <tr>
+                            {['Order ID', 'Table', 'Total', 'Status', 'Time'].map(header => (
+                                <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {header}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {orders.map((order) => (
+                            <tr key={order.id} className="hover:bg-indigo-50 transition duration-150">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.id}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.table}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">${order.total.toFixed(2)}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                        order.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                                        order.status === 'In Progress' ? 'bg-indigo-100 text-indigo-800' :
+                                        'bg-yellow-100 text-yellow-800'
+                                    }`}>
+                                        {order.status}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.time}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </PageContainer>
+    );
 }
 function Tables() {
   return <PageContainer title="Table Status"><p className="text-gray-600">View and manage table occupancy and status.</p></PageContainer>;
@@ -273,18 +361,15 @@ function Dashboard() {
 // --- Main App Logic (from your provided code) ---
 
 function Layout() {
-  // useLoadData now handles both loading state and initial auth simulation
   const isLoading = useLoadData(); 
   const location = useLocation();
   const hideHeaderRoutes = ["/auth"];
-  // useSelector now comes from the custom context implementation
   const { isAuth } = useSelector(state => state.user); 
 
   if(isLoading) return <FullScreenLoader />
 
   return (
     <>
-      {/* Conditionally render Header based on route */}
       {!hideHeaderRoutes.includes(location.pathname) && <Header />}
       
       <Routes>
@@ -296,7 +381,6 @@ function Layout() {
             </ProtectedRoutes>
           }
         />
-        {/* Navigate component (Capital 'N') is correct for component-based redirect */}
         <Route path="/auth" element={isAuth ? <Navigate to="/" /> : <Auth />} />
         <Route
           path="/orders"
@@ -339,7 +423,6 @@ function Layout() {
 function ProtectedRoutes({ children }) {
   const { isAuth } = useSelector((state) => state.user);
   if (!isAuth) {
-    // Navigate component (Capital 'N') is correct here for component-based redirect
     return <Navigate to="/auth" />; 
   }
 
