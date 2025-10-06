@@ -4,6 +4,7 @@ import {
   Route,
   useLocation,
   Navigate,
+  useNavigate,
 } from "react-router-dom";
 import { Home, Auth, Orders, Tables, Menu, Dashboard } from "./pages";
 import Header from "./components/shared/Header";
