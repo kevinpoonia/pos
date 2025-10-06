@@ -16,7 +16,10 @@ function Layout() {
   const location = useLocation();
   const hideHeaderRoutes = ["/auth"];
   const { isAuth } = useSelector(state => state.user);
+const navigate = useNavigate(); // Must be called inside a component
 
+// Use this function (lowercase 'n')
+navigate('/'); 
   if(isLoading) return <FullScreenLoader />
 
   return (
